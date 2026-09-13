@@ -21,6 +21,7 @@
     API_ENTRY( RtlAllocateHeap, Ntdll ) \
     API_ENTRY( NtProtectVirtualMemory, Ntdll ) \
     API_ENTRY( LdrLoadDll, Ntdll ) \
+    API_ENTRY( LdrGetProcedureAddress, Ntdll ) \
     \
     /*Kernel32.dll*/\
     \

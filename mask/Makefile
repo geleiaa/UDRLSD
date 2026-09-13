@@ -1,6 +1,6 @@
 PROJECT = sleepmask
 CCX64  := x86_64-w64-mingw32-gcc
-CFLAGS := -O0 -I../common/src -I../common/include -Iinclude -w
+CFLAGS := -O0 -I../common/src -I../common/include -Iinclude -w -D_WIN32_WINNT=0x0A00
 
 .DEFAULT: all
 .PHONY: all debug addflag bof

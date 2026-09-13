@@ -1,4 +1,5 @@
 #include <Common.h>
+#include <Constexpr.h>
 
 /*!
  * @brief
@@ -81,6 +82,8 @@ FUNC PVOID LdrFunction(
     CHAR                    FwdFunction[ MAX_PATH ] = { 0 };    
     PVOID                   FwdLibraryBase = { 0 };
     UINT32                  Index = { 0 };
+    ANSI_STRING             AnsiString = { 0 };
+    STARDUST_INSTANCE
 
     //
     // sanity check arguments
@@ -142,6 +145,27 @@ FUNC PVOID LdrFunction(
             MmCopy( FwdFunction, C_PTR( Address + Index + 1 ), KStringLengthA( C_PTR( Address + Index + 1 ) ) );
             FwdLibraryBase = KLoadLibrary( FwdLibrary );
             Address  = LdrFunction( FwdLibraryBase, HashString( FwdFunction, 0 ) );
+            //
+            // check if this is an API set function
+            //
+            // Hash first four characters of FwdFunction
+            ULONG FwdLibraryStart = HashString(FwdLibrary, 4);
+            // Check if it matches either "ext-" or "api-", indicating API set function
+            if ( FwdLibraryStart == HASH_STR( "ext-" ) || FwdLibraryStart == HASH_STR( "api-" ) )
+            {
+                AnsiString.Length        = KStringLengthA( FuncName );
+                AnsiString.MaximumLength = AnsiString.Length + sizeof( CHAR );
+                AnsiString.Buffer        = FuncName;
+                // Use LdrGetProcedureAddress to resolve addr, as API set forwarding is complicated
+                if ( !NT_SUCCESS( API( LdrGetProcedureAddress )( Library, &AnsiString, 0, &Address ) ) )
+                    Address = NULL;
+            }
+            else
+            {
+                // Otherwise load library and recurse into this function to resolve address
+                FwdLibraryBase = KLoadLibrary( FwdLibrary );
+                Address  = LdrFunction( FwdLibraryBase, HashString( FwdFunction, 0 ) );
+            }
         }
 
         break;

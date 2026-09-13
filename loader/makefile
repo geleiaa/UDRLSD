@@ -19,7 +19,7 @@ CFLAGS  += -s -ffunction-sections -falign-jumps=1 -w
 CFLAGS  += -falign-labels=1 -fPIC -Wl,-Tscripts/Linker.ld
 CFLAGS  += -Wl,-s,--no-seh,--enable-stdcall-fixup
 CFLAGS  += -Iinclude -masm=intel -fpermissive -mrdrnd
-CFLAGS  += -I../common/src -I../common/include -DPIC
+CFLAGS  += -I../common/src -I../common/include -DPIC -D_WIN32_WINNT=0x0A00
 
 ##
 ## Stardust source and object files
