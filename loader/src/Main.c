@@ -1,6 +1,15 @@
 #include <Common.h>
 #include <Constexpr.h>
 
+FUNC FILE *__cdecl __acrt_iob_funcs(unsigned index)
+{
+    STARDUST_INSTANCE
+    return &(API( __iob_func )()[index]);
+}
+
+#define stdin (__acrt_iob_funcs(0))
+#define stdout (__acrt_iob_funcs(1))
+#define stderr (__acrt_iob_funcs(2))
 
 FUNC BOOL ResolveApis()
 {
@@ -45,6 +54,23 @@ FUNC VOID Main(
     {
         return;
     }
+
+    #ifdef DEBUG
+    // Setup debug console for processes without a console
+    if (API( AllocConsole )())
+    {
+        HWND cWindows = API( GetConsoleWindow )();
+        API( freopen )("CONIN$", "r", stdin);
+        API( freopen )("CONOUT$", "w", stderr);
+        API( freopen )("CONOUT$", "w", stdout);
+        API( ShowWindow )(cWindows, SW_RESTORE);
+        API( SetForegroundWindow )(cWindows);
+        API( UpdateWindow )(cWindows);
+    }
+    #endif
+
+    PRINT("My test message");
+    PRINTB("Here is a test with args: %s and %d", "my argument", 10);
 
     Message = NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer;
 

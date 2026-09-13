@@ -24,6 +24,18 @@
 #define RESOLVE( x, y ) API( x ) = (__typeof__( x )*)LdrFunction( MOD( y ), HASH_STR( #x ) )
 
 //
+// print macros
+//
+#ifdef DEBUG
+    #define PRINT(format, ...) PrintMsg(__FUNCTION__, FALSE, format, ##__VA_ARGS__)
+    #define PRINTB(format, ...) PrintMsg(__FUNCTION__, TRUE, format, ##__VA_ARGS__)
+#else
+    #define PRINT(format, ...) ;
+    #define PRINTB(format, ...) ;
+#endif
+
+
+//
 // casting macros
 //
 #define C_PTR( x )   ( ( PVOID    ) ( x ) )

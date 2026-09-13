@@ -32,10 +32,11 @@ typedef struct _INSTANCE {
 
         // Populate struct using macro
         #define API_ENTRY(x, y) D_API(x)
-        API_ENTRY( RtlAllocateHeap, Ntdll ) \
-        API_ENTRY( NtProtectVirtualMemory, Ntdll ) \
-        API_ENTRY( LoadLibraryA, Kernel32 ) \
-        API_ENTRY( MessageBoxW, User32 )
+        //API_ENTRY( RtlAllocateHeap, Ntdll )
+        //API_ENTRY( NtProtectVirtualMemory, Ntdll )
+        //API_ENTRY( LoadLibraryA, Kernel32 )
+        //API_ENTRY( MessageBoxW, User32 )
+        API_LIST
         #undef API_ENTRY
 
     } Win32;
@@ -47,7 +48,8 @@ typedef struct _INSTANCE {
 
         // Populate other libraries via macro
         #define DLL_ENTRY(x) PVOID x;
-        DLL_ENTRY( User32 )
+        //DLL_ENTRY( User32 )
+        DLL_LIST
         #undef DLL_ENTRY
         
     } Modules;

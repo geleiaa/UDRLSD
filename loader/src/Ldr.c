@@ -77,6 +77,10 @@ FUNC PVOID LdrFunction(
     PDWORD                  AddrFuncs  = { 0 };
     PWORD                   AddrOrdns  = { 0 };
     PCHAR                   FuncName   = { 0 };
+    CHAR                    FwdLibrary [ MAX_PATH ] = { 0 };
+    CHAR                    FwdFunction[ MAX_PATH ] = { 0 };    
+    PVOID                   FwdLibraryBase = { 0 };
+    UINT32                  Index = { 0 };
 
     //
     // sanity check arguments
@@ -130,11 +134,84 @@ FUNC PVOID LdrFunction(
         if ( ( U_PTR( Address ) >= U_PTR( ExpDir ) ) &&
              ( U_PTR( Address ) <  U_PTR( ExpDir ) + ExpDirSize )
         ) {
-            __debugbreak();
+            // where is the dot
+            Index = CopyDotStr( Address );
+            // Copy the library from our string
+            MmCopy( FwdLibrary,  Address, Index );
+            // Copy the function from our string
+            MmCopy( FwdFunction, C_PTR( Address + Index + 1 ), KStringLengthA( C_PTR( Address + Index + 1 ) ) );
+            FwdLibraryBase = KLoadLibrary( FwdLibrary );
+            Address  = LdrFunction( FwdLibraryBase, HashString( FwdFunction, 0 ) );
         }
 
         break;
     }
 
     return Address;
+}
+
+FUNC UINT32 CopyDotStr( PCHAR String )
+{
+    for ( UINT32 i = 0; i < KStringLengthA( String ); i++ )
+    {
+        if ( String[ i ] == '.' )
+            return i;
+    }
+}
+
+FUNC PVOID KLoadLibrary( LPSTR ModuleName )
+{
+    STARDUST_INSTANCE
+    if ( ! ModuleName )
+        return NULL;
+
+    UNICODE_STRING  UnicodeString           = { 0 };
+    WCHAR           ModuleNameW[ MAX_PATH ] = { 0 };
+    DWORD           dwModuleNameSize        = KStringLengthA( ModuleName );
+    HMODULE         Module                  = NULL;
+
+    KCharStringToWCharString( ModuleNameW, ModuleName, dwModuleNameSize );
+
+    if ( ModuleNameW )
+    {
+        USHORT DestSize             = KStringLengthW( ModuleNameW ) * sizeof( WCHAR );
+        UnicodeString.Length        = DestSize;
+        UnicodeString.MaximumLength = DestSize + sizeof( WCHAR );
+    }
+
+    UnicodeString.Buffer = ModuleNameW;
+
+    if ( NT_SUCCESS( API( LdrLoadDll )( NULL, 0, &UnicodeString, &Module ) ) )
+        return Module;
+    else
+        return NULL;
+}
+
+FUNC SIZE_T KStringLengthA( LPCSTR String )
+{
+    LPCSTR String2 = String;
+    for (String2 = String; *String2; ++String2);
+    return (String2 - String);
+}
+
+FUNC SIZE_T KStringLengthW(LPCWSTR String)
+{
+    LPCWSTR String2;
+
+    for (String2 = String; *String2; ++String2);
+
+    return (String2 - String);
+}
+
+FUNC SIZE_T KCharStringToWCharString( PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed )
+{
+    INT Length = MaximumAllowed;
+
+    while (--Length >= 0)
+    {
+        if (!(*Destination++ = *Source++))
+            return MaximumAllowed - Length - 1;
+    }
+
+    return MaximumAllowed - Length;
 }
