@@ -54,6 +54,8 @@ typedef struct _INSTANCE {
         
     } Modules;
 
+    PCUSTOM_DATA cData;
+
 } INSTANCE, *PINSTANCE;
 
 EXTERN_C PVOID StRipStart();

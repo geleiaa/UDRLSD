@@ -44,7 +44,7 @@ FUNC VOID Main(
     _In_ PVOID Param
 ) {
     STARDUST_INSTANCE
-    //PCUSTOM_DATA            cData               = { 0 };
+    PCUSTOM_DATA            cData               = { 0 };
     PIMAGE_DOS_HEADER       DOS_Beacon          = { 0 };
     PIMAGE_NT_HEADERS       NT_Beacon           = { 0 };
     PVOID                   Message             = { 0 };
@@ -69,15 +69,24 @@ FUNC VOID Main(
     }
     #endif
 
-    PRINT("My test message");
-    PRINTB("Here is a test with args: %s and %d", "my argument", 10);
+    //PVOID myptr = 0x0000010000000000;
+    //PRINT("Addition: %p", PADD( myptr, 0x1000) );
+    //PRINT("Subtraction: %p", PSUB( myptr, 0x1000 ) );
+    //PRINT("Multiple values: %p", PADD( myptr, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000 ) );
+    PRINT("In UDRL!");
+    // Allocate a CUSTOM_DATA struct to store values in for later
+    cData = API( calloc )(1, sizeof(CUSTOM_DATA));
+    Instance()->cData = cData;
+    PRINT("cData: %p", cData);
+    //PRINT("My test message");
+    //PRINTB("Here is a test with args: %s and %d", "my argument", 10);
 
-    Message = NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer;
+    //Message = NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer;
 
     //
     // pop da message
     //
-    API( MessageBoxW )( NULL, Message, L"Stardust MessageBox", MB_OK );
+    //API( MessageBoxW )( NULL, Message, L"Stardust MessageBox", MB_OK );
     
     //cData = API( Instance()->Base.Buffer, Instance()->Base.Length);
     //Instance()->cData = cData;

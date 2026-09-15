@@ -37,6 +37,7 @@
     API_ENTRY( _snprintf, Msvcrt ) \
     API_ENTRY( vprintf, Msvcrt ) \
     API_ENTRY( getchar, Msvcrt ) \
+    API_ENTRY( calloc, Msvcrt ) \
     \
     /*User32.dll*/\
     \
@@ -49,9 +50,6 @@
 
 typedef struct _CUSTOM_DATA
 {
-
-    SIZE_T szStomp;
-    SIZE_T szBeacon;
-
-};
+    PVOID placeholder;
+} CUSTOM_DATA, *PCUSTOM_DATA;
 
