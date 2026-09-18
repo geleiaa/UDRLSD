@@ -40,8 +40,8 @@ def main() -> None:
     ##
     ## fill the padding to have a full page
     ##
-    for i in range( padding ):
-        shellcode.append( 0 )
+    #for i in range( padding ):
+    #    shellcode.append( 0 )
 
     ##
     ## get size of shellcode
@@ -51,9 +51,9 @@ def main() -> None:
     ##
     ## print metadata
     ##
-    print( f"[*] payload len : { size - padding } bytes" )
+    #print( f"[*] payload len : { size - padding } bytes" )
     print( f"[*] size        : { size } bytes" )
-    print( f"[*] padding     : { padding } bytes" )
+    #print( f"[*] padding     : { padding } bytes" )
     print( f"[*] page count  : { size / PAGE_SIZE } pages" )
 
     ##

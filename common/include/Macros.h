@@ -9,6 +9,7 @@
 #define Instance()        ( ( PINSTANCE ) __LocalInstance )
 #define STARDUST_INSTANCE PINSTANCE __LocalInstance = InstancePtr();
 #define CDATA             PCUSTOM_DATA cData = Instance()->cData;
+#define STARDUST_INSTANCE PINSTANCE __LocalInstance = ResolveInstanceAddr();
 
 
 //

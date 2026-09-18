@@ -29,6 +29,9 @@
     API_ENTRY( AllocConsole, Kernel32 ) \
     API_ENTRY( GetConsoleWindow, Kernel32 ) \
     API_ENTRY( HeapAlloc, Kernel32 ) \
+    API_ENTRY( TlsAlloc, Kernel32 ) \
+    API_ENTRY( TlsSetValue, Kernel32 ) \
+    API_ENTRY( TlsFree, Kernel32 ) \ 
     \
     /*Msvcrt.dll*/\
     API_ENTRY( freopen, Msvcrt ) \
@@ -47,6 +50,7 @@
     API_ENTRY( UpdateWindow, User32 )
 
     EXTERN_C VOID PrintMsg(const char*, BOOL, const char*, ...);
+    EXTERN_C PVOID ResolveInstanceAddr();
 
 typedef struct _CUSTOM_DATA
 {
