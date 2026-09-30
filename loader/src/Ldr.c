@@ -239,3 +239,91 @@ FUNC SIZE_T KCharStringToWCharString( PWCHAR Destination, PCHAR Source, SIZE_T M
 
     return MaximumAllowed - Length;
 }
+
+
+FUNC VOID ResolveIAT( LPVOID ImageBase, LPVOID IatDir )
+{
+	STARDUST_INSTANCE
+    PCHAR                    ImportModuleName  = NULL;
+    HMODULE                  ImportModule      = NULL;
+    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = NULL;
+    PIMAGE_THUNK_DATA        ILT               = NULL;
+    PIMAGE_THUNK_DATA        IAT               = NULL;
+    PCHAR				     pImportByName     = NULL;
+    LPVOID                   Function          = NULL;
+
+	// Iterate over each DLL that we required imports from
+	for ( pImportDescriptor = IatDir; pImportDescriptor->Name != 0; ++pImportDescriptor )
+    {
+        // Resolve DLL name and load it into the process / get a handle for it
+        ImportModuleName = PADD( ImageBase, pImportDescriptor->Name );
+        ImportModule     = KLoadLibrary( ImportModuleName );
+
+        // Resolve DLLs ILT and IAT entries
+		ILT              = PADD( ImageBase, pImportDescriptor->OriginalFirstThunk );
+        IAT              = PADD( ImageBase, pImportDescriptor->FirstThunk );
+
+		// Iterate over ILT and IAT, resolving each function imported from this DLL
+        for ( ; ILT->u1.AddressOfData != 0 ; ++ILT, ++IAT )
+        {
+            // If function is to be imported by ordinal call LdrGetProcedureAddress
+            if ( IMAGE_SNAP_BY_ORDINAL( ILT->u1.Ordinal ) )
+            {
+                PRINT("Importing ordinal: %lu from DLL: %s", IMAGE_ORDINAL( ILT->u1.Ordinal ), ImportModuleName );
+                if ( NT_SUCCESS( API( LdrGetProcedureAddress )(ImportModule, NULL, IMAGE_ORDINAL( ILT->u1.Ordinal ), &Function) ) )
+                    IAT->u1.Function = Function;
+                else
+                    PRINT("Failed!");
+            }
+            // Otherwise if importing by name resolve function name and use LdrFunction
+            else
+            {
+                pImportByName       = ( ( PIMAGE_IMPORT_BY_NAME )( PADD( ImageBase, ILT->u1.AddressOfData ) ) )->Name;
+                Function            = LdrFunction(ImportModule, HashString( pImportByName, 0 ) );
+                PRINT("Importing function: %s from DLL: %s", pImportByName, ImportModuleName );
+                if ( Function != NULL )
+                    IAT->u1.Function = Function;
+                else
+                    PRINT("Failed!");
+            }
+        }
+    }
+}
+
+
+
+FUNC VOID ProcessRelocations( LPVOID ActualBase, LPVOID PreferredBase, LPVOID RelocDir )
+{
+	STARDUST_INSTANCE
+    PIMAGE_BASE_RELOCATION  RelocBlock  = RelocDir;
+    PIMAGE_RELOC            RelocEntry  = NULL;
+    LPVOID                  RelocOffset = PSUB( ActualBase, PreferredBase );
+
+    // Loop over relocation blocks 
+    while ( RelocBlock->VirtualAddress != 0 )
+    {
+        // Entries start immediately after the IMAGE_BASE_RELOCATION struct at RelocBlock
+        RelocEntry = ( PIMAGE_RELOC )( RelocBlock + 1 );
+
+        // Loop over entries until we have covered the size specified in SizeOfBlock 
+        while ( C_PTR( RelocEntry ) != PADD( RelocBlock, RelocBlock->SizeOfBlock ) )
+        {
+            // 64 bit relocations
+            if ( RelocEntry->type == IMAGE_REL_BASED_DIR64 )
+            {
+                PRINT("Block RVA: %x Entry offset: %x", RelocBlock->VirtualAddress, RelocEntry->offset);
+                C_DEF64( PADD( ActualBase, RelocBlock->VirtualAddress, RelocEntry->offset ) ) += U_PTR( RelocOffset );
+            }
+            else if ( RelocEntry->type == 0 )
+                ;
+            else
+                PRINT( "Unsupported relocation type: %u", RelocEntry->type );
+
+            // Proceed to next relocation entry
+            RelocEntry++;
+        }
+
+        // After internal loop as broken, RelocEntry will point to the next IMAGE_BASE_RELOCATION struct
+        RelocBlock = ( PIMAGE_BASE_RELOCATION ) RelocEntry;
+    }
+}

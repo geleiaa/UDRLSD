@@ -22,6 +22,7 @@
     API_ENTRY( NtProtectVirtualMemory, Ntdll ) \
     API_ENTRY( LdrLoadDll, Ntdll ) \
     API_ENTRY( LdrGetProcedureAddress, Ntdll ) \
+    API_ENTRY( NtFlushInstructionCache, Ntdll ) \
     \
     /*Kernel32.dll*/\
     \
@@ -31,7 +32,8 @@
     API_ENTRY( HeapAlloc, Kernel32 ) \
     API_ENTRY( TlsAlloc, Kernel32 ) \
     API_ENTRY( TlsSetValue, Kernel32 ) \
-    API_ENTRY( TlsFree, Kernel32 ) \ 
+    API_ENTRY( TlsFree, Kernel32 ) \
+    API_ENTRY( VirtualAlloc, Kernel32 ) \
     \
     /*Msvcrt.dll*/\
     API_ENTRY( freopen, Msvcrt ) \
@@ -41,6 +43,7 @@
     API_ENTRY( vprintf, Msvcrt ) \
     API_ENTRY( getchar, Msvcrt ) \
     API_ENTRY( calloc, Msvcrt ) \
+    API_ENTRY( strcmp, Msvcrt ) \
     \
     /*User32.dll*/\
     \
@@ -54,6 +57,14 @@
 
 typedef struct _CUSTOM_DATA
 {
-    PVOID placeholder;
+    PVOID	            pStompBeacon;
+    PVOID	            pStompSleepmask;
+	PVOID	            pStompBof;
+    PVOID               pStompBeaconExec;
+    PVOID               pStompBeaconRw;
+    SIZE_T 	            szBeacon;
+    SIZE_T 	            szStomp;
+    SIZE_T              szBeaconExec;
+    SIZE_T              szBeaconRw;
 } CUSTOM_DATA, *PCUSTOM_DATA;
 

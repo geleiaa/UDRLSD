@@ -49,8 +49,15 @@ int main( int argc, char** argv )
     }
 
     printf( "[*] Address => %p\n", ShellcodeMemory );
+    printf( "[*] Size    => 0x%x\n", ShellcodeSize );
+    printf( "[*] PID     => %d\n", GetCurrentProcessId() );
+
 
     memcpy( ShellcodeMemory, ShellcodeBytes, ShellcodeSize );
+
+    // Clear shellcode buffer from memory to avoid leaving extra artifacts
+    memset( ShellcodeBytes, 0, ShellcodeSize );
+    LocalFree( ShellcodeBytes );
 
     VirtualProtect( ShellcodeMemory, ShellcodeSize, PAGE_EXECUTE_READ, &OldProtection );
 
@@ -58,4 +65,8 @@ int main( int argc, char** argv )
     getchar();
 
     ((ShellcodeMain)ShellcodeMemory)();
+
+    // Sleep indefinitely so we can test our shellcode's exit-thread functionality
+    while (TRUE)
+        Sleep(10000);
 }
